@@ -103,7 +103,6 @@
         .upload-status.error { background: #f8d7da; color: #721c24; }
         .btn-sm { padding: 4px 8px; font-size: 0.7rem; }
         
-        /* Tambahan untuk pesan error/success */
         .toast-message {
             position: fixed;
             bottom: 20px;
@@ -298,7 +297,7 @@
             <div class="table-container">
                 <table id="dataPesertaViewer">
                     <thead><tr><th>Rank</th><th>ID Kartu</th><th>Nama</th><th>Kelas</th><th>JK</th><th>Tab/Minggu</th><th>Skor</th></tr></thead>
-                    <tbody id="pesertaTableBodyViewer"><tr><td colspan="7">Memuat...</td></tr></tbody>
+                    <tbody id="pesertaTableBodyViewer"></tr></tbody>
                 </table>
             </div>
             <div class="status-bar"><div>ℹ️ Target 21x tab/minggu = skor 100 | 67-100=Baik | 34-66=Sedang | 0-33=Cukup</div></div>
@@ -376,7 +375,6 @@
         let currentEditId = null;
         let uploadedExcelData = [];
         
-        // Fungsi toast notifikasi
         function showToast(message, isError = false) {
             const toast = document.createElement('div');
             toast.className = 'toast-message';
@@ -416,11 +414,9 @@
         // ==================== SIMPAN KE FIREBASE ====================
         async function saveToFirebase() {
             try {
-                const usersRef = database.ref('users');
-                const updates = {};
-                
+                // Simpan users
                 for (const user of pesertaData) {
-                    updates[user.idKartu] = {
+                    await database.ref('users/' + user.idKartu).set({
                         uid: user.idKartu,
                         nama: user.nama,
                         kelas: user.kelas,
@@ -428,11 +424,11 @@
                         weeklyCount: user.weeklyCount || 0,
                         skor: user.skor || 0,
                         ranking: user.ranking || 0
-                    };
+                    });
                 }
                 
-                await usersRef.update(updates);
-                await database.ref('system').update({
+                // Simpan system info
+                await database.ref('system').set({
                     namaSekolah: eventInfo.namaSekolah,
                     predikat: eventInfo.predikat,
                     targetMingguan: eventInfo.targetMingguan,
@@ -486,14 +482,12 @@
                 hitungRanking();
                 updateHeaderInfo();
                 updateOperatorTable();
-                if (isViewerLoggedIn) updateViewerTable();
+                updateViewerTable();
                 
                 document.getElementById("saveStatus").innerHTML = "✅ Terhubung ke Firebase";
-                return true;
             } catch (error) {
                 console.error("Load error:", error);
                 document.getElementById("saveStatus").innerHTML = "⚠️ Gagal koneksi";
-                return false;
             }
         }
         
@@ -516,12 +510,9 @@
                     pesertaData = newData;
                     hitungRanking();
                     updateOperatorTable();
-                    if (isViewerLoggedIn) updateViewerTable();
-                    document.getElementById("saveStatus").innerHTML = "✅ Data diperbarui " + new Date().toLocaleTimeString();
-                    setTimeout(() => {
-                        if (document.getElementById("saveStatus")) 
-                            document.getElementById("saveStatus").innerHTML = "✅ Terhubung ke Firebase";
-                    }, 1500);
+                    updateViewerTable();
+                    document.getElementById("totalPeserta").innerText = pesertaData.length;
+                    document.getElementById("infoPesertaCount").innerText = pesertaData.length;
                 }
             });
             
@@ -534,7 +525,7 @@
                     eventInfo.skorMaksimal = sys.skorMaksimal || 100;
                     updateHeaderInfo();
                     updateOperatorTable();
-                    if (isViewerLoggedIn) updateViewerTable();
+                    updateViewerTable();
                 }
             });
         }
@@ -556,9 +547,8 @@
             const maxSkor = eventInfo.skorMaksimal;
             
             if (pesertaData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Belum ada data</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Belum ada数据</td></tr>';
                 document.getElementById("totalPeserta").innerText = "0";
-                document.getElementById("infoPesertaCount").innerText = "0";
                 return;
             }
             
@@ -647,8 +637,6 @@
                 pesertaData[index].weeklyCount = val;
                 hitungRanking();
                 await saveToFirebase();
-                updateOperatorTable();
-                if (isViewerLoggedIn) updateViewerTable();
                 showToast("✅ Skor diperbarui!");
             }
         }
@@ -664,8 +652,6 @@
                 pesertaData = pesertaData.filter(p => p.idKartu !== idKartu);
                 hitungRanking();
                 await saveToFirebase();
-                updateOperatorTable();
-                if (isViewerLoggedIn) updateViewerTable();
                 showToast("✅ Pengguna dihapus!");
             }
         }
@@ -677,19 +663,13 @@
             const kelas = document.getElementById("kelas").value;
             const jk = document.getElementById("jenisKelamin").value;
             
-            console.log("Tambah User - ID:", idKartu, "Nama:", nama, "Kelas:", kelas, "JK:", jk);
-            
             if (!idKartu || !nama || !kelas || !jk) {
                 alert("❌ Harap isi semua data!");
-                console.log("Validasi gagal: ada field kosong");
                 return;
             }
             
-            // Cek duplikat
-            const isDuplicate = pesertaData.some(p => p.idKartu === idKartu);
-            if (isDuplicate) {
+            if (pesertaData.some(p => p.idKartu === idKartu)) {
                 alert("❌ ID Kartu sudah terdaftar!");
-                console.log("Validasi gagal: ID duplikat", idKartu);
                 return;
             }
             
@@ -703,25 +683,16 @@
                 ranking: 0
             };
             
-            console.log("Menambahkan user baru:", newUser);
             pesertaData.push(newUser);
             hitungRanking();
+            await saveToFirebase();
             
-            const success = await saveToFirebase();
-            if (success) {
-                updateOperatorTable();
-                if (isViewerLoggedIn) updateViewerTable();
-                
-                document.getElementById("idKartu").value = "";
-                document.getElementById("namaPengguna").value = "";
-                document.getElementById("kelas").value = "";
-                document.getElementById("jenisKelamin").value = "";
-                
-                alert(`✅ Pengguna "${nama}" berhasil ditambahkan!`);
-                console.log("User berhasil ditambahkan, total:", pesertaData.length);
-            } else {
-                alert("❌ Gagal menyimpan ke Firebase!");
-            }
+            document.getElementById("idKartu").value = "";
+            document.getElementById("namaPengguna").value = "";
+            document.getElementById("kelas").value = "";
+            document.getElementById("jenisKelamin").value = "";
+            
+            alert(`✅ Pengguna "${nama}" berhasil ditambahkan!`);
         }
         
         function openEditModal(idKartu) {
@@ -752,8 +723,6 @@
                 pesertaData[index].jk = newJk;
                 hitungRanking();
                 await saveToFirebase();
-                updateOperatorTable();
-                if (isViewerLoggedIn) updateViewerTable();
                 alert("✅ Data berhasil diupdate!");
                 closeEditModal();
             }
@@ -771,8 +740,6 @@
             eventInfo.skorMaksimal = parseInt(document.getElementById("skorMaksimal").value);
             updateHeaderInfo();
             hitungRanking();
-            updateOperatorTable();
-            if (isViewerLoggedIn) updateViewerTable();
             await saveToFirebase();
             alert("✅ Informasi sekolah diperbarui!");
         }
@@ -781,8 +748,6 @@
             if (confirm("Yakin menghapus SEMUA data pengguna?")) {
                 pesertaData = [];
                 await saveToFirebase();
-                updateOperatorTable();
-                if (isViewerLoggedIn) updateViewerTable();
                 document.getElementById("resetModal").style.display = "none";
                 alert("✅ Semua data telah direset!");
             }
@@ -888,8 +853,6 @@
             
             hitungRanking();
             await saveToFirebase();
-            updateOperatorTable();
-            if (isViewerLoggedIn) updateViewerTable();
             alert(`✅ ${newData.length} pengguna berhasil diimport!`);
             clearPreview();
         }
@@ -941,17 +904,12 @@
             document.getElementById("logoutOperatorBtn").onclick = () => location.reload();
             document.getElementById("logoutViewerBtn").onclick = () => location.reload();
             
-            // CRUD - PASTIKAN TOMOL TERHUBUNG
-            const tambahBtn = document.getElementById("tambahPesertaBtn");
-            if (tambahBtn) {
-                tambahBtn.onclick = tambahUser;
-                console.log("Tombol Tambah Pengguna terhubung");
-            } else {
-                console.error("Tombol tambahPesertaBtn tidak ditemukan!");
-            }
-            
+            // CRUD
+            document.getElementById("tambahPesertaBtn").onclick = tambahUser;
             document.getElementById("saveEditBtn").onclick = saveEditUser;
             document.getElementById("cancelEditBtn").onclick = closeEditModal;
+            
+            // Settings
             document.getElementById("refreshDataBtn").onclick = refreshData;
             document.getElementById("refreshTableBtn").onclick = refreshData;
             document.getElementById("settingsBtn").onclick = () => {
@@ -965,11 +923,17 @@
             document.getElementById("showSettingsBtn").onclick = () => document.getElementById("settingsSection").style.display = "block";
             document.getElementById("updateEventBtn").onclick = updateEventInfo;
             document.getElementById("savePasswordBtn").onclick = changePassword;
+            
+            // Export
             document.getElementById("exportExcelBtn").onclick = exportToExcel;
             document.getElementById("exportPDFBtn").onclick = exportToPDF;
+            
+            // Reset
             document.getElementById("resetDataBtn").onclick = () => document.getElementById("resetModal").style.display = "flex";
             document.getElementById("confirmResetBtn").onclick = resetAllData;
             document.getElementById("cancelResetBtn").onclick = () => document.getElementById("resetModal").style.display = "none";
+            
+            // Excel import
             document.getElementById("excelFile").onchange = handleFileUpload;
             document.getElementById("uploadExcelBtn").onclick = importExcelData;
             document.getElementById("clearPreviewBtn").onclick = clearPreview;
