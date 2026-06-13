@@ -284,7 +284,7 @@
                         </tr>
                     </thead>
                     <tbody id="pesertaTableBody">
-                        <tr><td colspan="9" style="text-align:center;">Memuat data...</td></tr>
+                        <tr><td colspan="9" style="text-align:center;">Memuat data...</td</tr>
                     </tbody>
                 </table>
             </div>
@@ -297,7 +297,7 @@
             <div class="table-container">
                 <table id="dataPesertaViewer">
                     <thead><tr><th>Rank</th><th>ID Kartu</th><th>Nama</th><th>Kelas</th><th>JK</th><th>Tab/Minggu</th><th>Skor</th></tr></thead>
-                    <tbody id="pesertaTableBodyViewer"></tr></tbody>
+                    <tbody id="pesertaTableBodyViewer"><tr><td colspan="7">Memuat...</td</tr></tbody>
                 </table>
             </div>
             <div class="status-bar"><div>ℹ️ Target 21x tab/minggu = skor 100 | 67-100=Baik | 34-66=Sedang | 0-33=Cukup</div></div>
@@ -414,7 +414,7 @@
         // ==================== SIMPAN KE FIREBASE ====================
         async function saveToFirebase() {
             try {
-                // Simpan users
+                // Simpan users satu per satu
                 for (const user of pesertaData) {
                     await database.ref('users/' + user.idKartu).set({
                         uid: user.idKartu,
@@ -443,7 +443,7 @@
                 return true;
             } catch (error) {
                 console.error("Save error:", error);
-                document.getElementById("saveStatus").innerHTML = "⚠️ Gagal simpan";
+                document.getElementById("saveStatus").innerHTML = "⚠️ Gagal simpan: " + error.message;
                 return false;
             }
         }
@@ -485,9 +485,12 @@
                 updateViewerTable();
                 
                 document.getElementById("saveStatus").innerHTML = "✅ Terhubung ke Firebase";
+                document.getElementById("totalPeserta").innerText = pesertaData.length;
+                document.getElementById("infoPesertaCount").innerText = pesertaData.length;
+                document.getElementById("totalPesertaViewer").innerText = pesertaData.length;
             } catch (error) {
                 console.error("Load error:", error);
-                document.getElementById("saveStatus").innerHTML = "⚠️ Gagal koneksi";
+                document.getElementById("saveStatus").innerHTML = "⚠️ Gagal koneksi: " + error.message;
             }
         }
         
@@ -513,6 +516,8 @@
                     updateViewerTable();
                     document.getElementById("totalPeserta").innerText = pesertaData.length;
                     document.getElementById("infoPesertaCount").innerText = pesertaData.length;
+                    document.getElementById("totalPesertaViewer").innerText = pesertaData.length;
+                    showToast("Data diperbarui!");
                 }
             });
             
@@ -524,8 +529,6 @@
                     eventInfo.targetMingguan = sys.targetMingguan || 21;
                     eventInfo.skorMaksimal = sys.skorMaksimal || 100;
                     updateHeaderInfo();
-                    updateOperatorTable();
-                    updateViewerTable();
                 }
             });
         }
@@ -547,8 +550,7 @@
             const maxSkor = eventInfo.skorMaksimal;
             
             if (pesertaData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Belum ada数据</td></tr>';
-                document.getElementById("totalPeserta").innerText = "0";
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Belum ada data</td></tr>';
                 return;
             }
             
@@ -575,10 +577,6 @@
                 `;
             });
             
-            document.getElementById("totalPeserta").innerText = pesertaData.length;
-            document.getElementById("infoPesertaCount").innerText = pesertaData.length;
-            document.getElementById("lastUpdate").innerText = new Date().toLocaleString();
-            
             // Event listeners
             document.querySelectorAll(".score-input").forEach(inp => {
                 inp.removeEventListener('change', handleScoreChange);
@@ -603,8 +601,7 @@
             const maxSkor = eventInfo.skorMaksimal;
             
             if (pesertaData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7">Belum ada data</td></tr>';
-                document.getElementById("totalPesertaViewer").innerText = "0";
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Belum ada data</td></tr>';
                 return;
             }
             
@@ -625,7 +622,6 @@
                     <td class="${p.skor >= 67 ? 'best-score' : ''}">${p.skor || 0} / ${maxSkor}</td>
                 `;
             });
-            document.getElementById("totalPesertaViewer").innerText = pesertaData.length;
         }
         
         // ==================== EVENT HANDLERS ====================
@@ -685,14 +681,18 @@
             
             pesertaData.push(newUser);
             hitungRanking();
-            await saveToFirebase();
             
-            document.getElementById("idKartu").value = "";
-            document.getElementById("namaPengguna").value = "";
-            document.getElementById("kelas").value = "";
-            document.getElementById("jenisKelamin").value = "";
-            
-            alert(`✅ Pengguna "${nama}" berhasil ditambahkan!`);
+            const success = await saveToFirebase();
+            if (success) {
+                document.getElementById("idKartu").value = "";
+                document.getElementById("namaPengguna").value = "";
+                document.getElementById("kelas").value = "";
+                document.getElementById("jenisKelamin").value = "";
+                alert(`✅ Pengguna "${nama}" berhasil ditambahkan!`);
+                showToast(`✅ ${nama} ditambahkan!`);
+            } else {
+                alert("❌ Gagal menyimpan ke Firebase!");
+            }
         }
         
         function openEditModal(idKartu) {
@@ -785,7 +785,7 @@
         }
         
         function exportToPDF() {
-            if (pesertaData.length === 0) { alert("Tidak ada data!"); return; }
+            if (pesertaData.length === 0) { alert("Tidak ada数据!"); return; }
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('landscape');
             doc.text("LAPORAN BANK SAMPAH WALL-H", 14, 15);
