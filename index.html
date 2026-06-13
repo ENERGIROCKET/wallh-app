@@ -268,7 +268,7 @@
         <div class="viewer-panel" id="viewerPanel">
             <div class="panel-header"><h2>👁️ Peringkat Bank Sampah</h2><button class="btn logout-btn" id="logoutViewerBtn">🚪 Keluar</button></div>
             <div class="status-bar"><div><strong>Total:</strong> <span id="totalPesertaViewer">0</span></div></div>
-            <div class="table-container"><table id="dataPesertaViewer"><thead><tr><th>Rank</th><th>ID Kartu</th><th>Nama</th><th>Kelas</th><th>JK</th><th>Tab/Minggu</th><th>Skor</th></tr></thead><tbody id="pesertaTableBodyViewer"><tr><td colspan="7">Memuat...</td</tr></tbody></table></div>
+            <div class="table-container"><table id="dataPesertaViewer"><thead><tr><th>Rank</th><th>ID Kartu</th><th>Nama</th><th>Kelas</th><th>JK</th><th>Tab/Minggu</th><th>Skor</th></tr></thead><tbody id="pesertaTableBodyViewer"><tr><td colspan="7">Memuat...</td</tr></tbody><table></div>
             <div class="status-bar"><div>ℹ️ Target 21x tab/minggu = skor 100 | 67-100=Baik | 34-66=Sedang | 0-33=Cukup</div></div>
         </div>
         
@@ -323,12 +323,10 @@
             setTimeout(() => toast.remove(), 3000);
         }
         
-        // Konversi ID dengan titik ke tanpa titik (untuk key Firebase)
         function removeDots(id) {
             return id.replace(/\./g, "");
         }
         
-        // Konversi ID tanpa titik ke dengan titik (untuk tampilan)
         function addDots(id) {
             if (id.length <= 3) return id;
             let result = "";
@@ -337,6 +335,22 @@
                 if ((i + 1) % 3 === 0 && i < id.length - 1) result += ".";
             }
             return result;
+        }
+        
+        // ==================== HAPUS USER ====================
+        async function deleteUserFromFirebase(idKartu) {
+            try {
+                const cleanId = removeDots(idKartu);
+                const userRef = database.ref('users/' + cleanId);
+                await userRef.remove();
+                console.log(`✅ User ${idKartu} berhasil dihapus`);
+                showToast(`✅ User ${idKartu} berhasil dihapus!`);
+                return true;
+            } catch (error) {
+                console.error("Gagal hapus:", error);
+                showToast(`❌ Gagal hapus: ${error.message}`, true);
+                return false;
+            }
         }
         
         // ==================== FUNGSI HITUNG SKOR & RANKING ====================
@@ -412,7 +426,6 @@
                     const usersObj = usersSnapshot.val();
                     pesertaData = Object.keys(usersObj).map((key, index) => {
                         const user = usersObj[key];
-                        // Tampilkan ID dengan titik
                         const displayId = user.uid || addDots(key);
                         return {
                             id: index + 1,
@@ -512,7 +525,7 @@
             const maxSkor = eventInfo.skorMaksimal;
             
             if (pesertaData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Belum ada data</td</tr>';
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Belum ada数据</td</tr>';
                 return;
             }
             
@@ -534,7 +547,7 @@
                     <td>${p.ranking || 0}</td>
                     <td>
                         <button class="btn btn-edit btn-sm edit-user" data-id="${p.idKartu}" style="padding:4px 8px;">✏️ Edit</button>
-                        <button class="btn btn-danger btn-sm delete-user" data-id="${p.idKartu}" data-clean="${removeDots(p.idKartu)}" style="padding:4px 8px;">🗑️ Hapus</button>
+                        <button class="btn btn-danger btn-sm delete-user" data-id="${p.idKartu}" style="padding:4px 8px;">🗑️ Hapus</button>
                     </td>
                 `;
             });
@@ -562,7 +575,7 @@
             const maxSkor = eventInfo.skorMaksimal;
             
             if (pesertaData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7">Belum ada数据</td</tr>';
+                tbody.innerHTML = '<table><td colspan="7">Belum ada数据</td</tr>';
                 return;
             }
             
@@ -589,7 +602,6 @@
         async function handleScoreChange(e) {
             const idKartu = e.target.dataset.id;
             const val = parseInt(e.target.value) || 0;
-            const cleanId = removeDots(idKartu);
             const index = pesertaData.findIndex(p => p.idKartu === idKartu);
             if (index !== -1) {
                 pesertaData[index].weeklyCount = val;
@@ -608,12 +620,21 @@
         
         async function handleDeleteClick(e) {
             const idKartu = e.currentTarget.dataset.id;
-            const cleanId = e.currentTarget.dataset.clean;
-            if (confirm(`Hapus pengguna dengan ID ${idKartu}?`)) {
-                // Hapus dari Firebase
-                await database.ref('users/' + cleanId).remove();
-                showToast("✅ Pengguna dihapus!");
-                // Data akan otomatis update via realtime listener
+            
+            if (confirm(`⚠️ Yakin ingin menghapus pengguna dengan ID: ${idKartu}?\n\nTindakan ini tidak dapat dibatalkan!`)) {
+                const btn = e.currentTarget;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = "⏳...";
+                btn.disabled = true;
+                
+                const success = await deleteUserFromFirebase(idKartu);
+                
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                
+                if (success) {
+                    setTimeout(() => loadFromFirebase(), 500);
+                }
             }
         }
         
@@ -624,7 +645,6 @@
             const kelas = document.getElementById("kelas").value;
             const jk = document.getElementById("jenisKelamin").value;
             
-            // Hapus titik jika ada
             idKartu = idKartu.replace(/\./g, "");
             
             if (!idKartu || !nama || !kelas || !jk) {
@@ -632,15 +652,15 @@
                 return;
             }
             
-            // Cek duplikat
-            if (pesertaData.some(p => removeDots(p.idKartu) === idKartu)) {
+            const cleanId = idKartu;
+            const displayId = addDots(idKartu);
+            
+            // Cek apakah sudah ada
+            const snapshot = await database.ref('users/' + cleanId).once('value');
+            if (snapshot.exists()) {
                 alert("❌ ID Kartu sudah terdaftar!");
                 return;
             }
-            
-            // Simpan ke Firebase dengan key tanpa titik
-            const cleanId = idKartu;
-            const displayId = addDots(idKartu);
             
             await database.ref('users/' + cleanId).set({
                 uid: displayId,
@@ -736,7 +756,7 @@
             document.getElementById("confirmPassword").value = "";
         }
         
-        // ==================== EXPORT FUNCTIONS ====================
+        // ==================== EXPORT ====================
         function exportToExcel() {
             if (pesertaData.length === 0) { alert("Tidak ada data!"); return; }
             const data = [["No","ID Kartu","Nama","Kelas","JK","Tab Minggu Ini","Skor","Ranking"]];
@@ -781,7 +801,7 @@
                     
                     if (uploadedExcelData.length) {
                         let html = '<table style="width:100%"><tr style="background:#f0e6a0;"><th>ID</th><th>Nama</th><th>Kelas</th><th>JK</th></tr>';
-                        uploadedExcelData.slice(0,10).forEach(r => html += `<tr><td>${r.idKartu}</td><td>${r.nama}</td><td>${r.kelas}</td><td>${r.jk}</td></tr>`);
+                        uploadedExcelData.slice(0,10).forEach(r => html += `<tr><td>${r.idKartu}</td><td>${r.nama}</td><td>${r.kelas}</td><td>${r.jk}<tr></tr>`);
                         if (uploadedExcelData.length > 10) html += `<tr><td colspan="4">... dan ${uploadedExcelData.length-10} data lainnya</td</tr>`;
                         html += '</table>';
                         document.getElementById("previewTable").innerHTML = html;
@@ -803,7 +823,6 @@
                 const cleanId = item.idKartu;
                 const displayId = addDots(cleanId);
                 
-                // Cek apakah sudah ada
                 const snapshot = await database.ref('users/' + cleanId).once('value');
                 if (!snapshot.exists()) {
                     await database.ref('users/' + cleanId).set({
