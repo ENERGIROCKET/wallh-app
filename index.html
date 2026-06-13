@@ -3,105 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WALL-H | Bank Sampah Cerdas (Offline Mode)</title>
+    <title>WALL-H | Bank Sampah Cerdas</title>
     
-    <!-- Library untuk export PDF -->
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    
+    <!-- Library untuk export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    
-    <!-- Library untuk export Excel -->
     <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     
     <style>
-        * {
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; padding: 0; background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%); min-height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; background-color: white; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
         
-        body {
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
-            min-height: 100vh;
-        }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background-color: white;
-            min-height: 100vh;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-        }
-        
-        header {
-            background: linear-gradient(135deg, #f9a825, #f57f17);
-            color: white;
-            padding: 20px;
-            text-align: center;
-            position: relative;
-        }
-        
-       .logo-left {
-    position: absolute;
-    top: 15px;
-    left: 20px;
-    width: 130px;
-    height: 130px;
-    background: #ffd700;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
-    border: 3px solid #f57f17;
-    overflow: hidden;
-}
-
-.logo-left img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.logo-right {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    width: 130px;
-    height: 130px;
-    background: #ffd700;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
-    border: 3px solid #f57f17;
-    overflow: hidden;
-}
-
-.logo-right img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-        
-        .logo-left small, .logo-right small { font-size: 8px; display: block; }
-        
-        @media (max-width: 768px) {
-            .logo-left, .logo-right { width: 55px; height: 55px; top: 10px; font-size: 8px; }
-            h1 { font-size: 1.2rem; }
-        }
+        header { background: linear-gradient(135deg, #f9a825, #f57f17); color: white; padding: 20px; text-align: center; position: relative; }
+        .logo-left { position: absolute; top: 15px; left: 20px; width: 130px; height: 130px; background: #ffd700; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.25); border: 3px solid #f57f17; overflow: hidden; }
+        .logo-left img { width: 100%; height: 100%; object-fit: cover; }
+        .logo-right { position: absolute; top: 15px; right: 20px; width: 130px; height: 130px; background: #ffd700; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.25); border: 3px solid #f57f17; overflow: hidden; }
+        .logo-right img { width: 100%; height: 100%; object-fit: cover; }
+        @media (max-width: 768px) { .logo-left, .logo-right { width: 55px; height: 55px; top: 10px; } h1 { font-size: 1.2rem; } }
         
         h1 { margin: 0 0 10px 0; font-size: 1.6rem; letter-spacing: 2px; }
         .header-subtitle { font-size: 0.8rem; opacity: 0.9; margin-bottom: 12px; }
         .inova-title { font-size: 0.7rem; font-weight: bold; background: rgba(255,255,255,0.2); display: inline-block; padding: 4px 12px; border-radius: 20px; }
         
-        .header-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 10px;
-            margin-top: 12px;
-        }
+        .header-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 12px; }
         .info-item { background: rgba(255,255,255,0.15); padding: 6px; border-radius: 8px; text-align: center; }
         .info-label { font-size: 0.7rem; opacity: 0.9; }
         .info-value { font-size: 0.8rem; font-weight: bold; }
@@ -111,16 +40,7 @@
         .login-box h2 { margin-top: 0; color: #f57f17; margin-bottom: 25px; }
         
         .login-options { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
-        .login-btn {
-            padding: 14px;
-            background: linear-gradient(135deg, #f9a825, #f57f17);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            cursor: pointer;
-            font-weight: bold;
-        }
+        .login-btn { padding: 14px; background: linear-gradient(135deg, #f9a825, #f57f17); color: white; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; font-weight: bold; }
         .login-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(245,127,23,0.3); }
         
         .password-section { display: none; margin-top: 20px; }
@@ -131,30 +51,11 @@
         
         .operator-panel, .viewer-panel { display: none; padding: 20px; }
         
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 3px solid #f57f17;
-        }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 3px solid #f57f17; }
         .panel-header h2 { color: #f57f17; margin: 0; font-size: 1.2rem; }
         
         .button-group { display: flex; gap: 8px; flex-wrap: wrap; }
-        .btn {
-            padding: 8px 16px;
-            background: linear-gradient(135deg, #f9a825, #f57f17);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            font-weight: bold;
-            transition: all 0.2s;
-        }
+        .btn { padding: 8px 16px; background: linear-gradient(135deg, #f9a825, #f57f17); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: all 0.2s; }
         .btn:hover { transform: translateY(-1px); }
         .btn-danger { background: linear-gradient(135deg, #f44336, #d32f2f); }
         .btn-success { background: linear-gradient(135deg, #4caf50, #388e3c); }
@@ -163,29 +64,12 @@
         .logout-btn { background: linear-gradient(135deg, #9e9e9e, #757575); }
         .refresh-btn { background: linear-gradient(135deg, #2196f3, #1976d2); }
         
-        .status-bar {
-            padding: 10px 15px;
-            background: #fff9e6;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            border-left: 4px solid #f57f17;
-        }
-        .status-online { background: #4caf50; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; }
+        .status-bar { padding: 10px 15px; background: #fff9e6; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-left: 4px solid #f57f17; }
         
         .input-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
         @media (max-width: 768px) { .input-section { grid-template-columns: 1fr; } }
         
-        .manual-input, .file-upload, .event-config, .settings-section {
-            background: #fff9e6;
-            padding: 18px;
-            border-radius: 12px;
-            border: 1px solid #f0e6a0;
-        }
+        .manual-input, .file-upload, .event-config, .settings-section { background: #fff9e6; padding: 18px; border-radius: 12px; border: 1px solid #f0e6a0; }
         .manual-input h3, .file-upload h3 { margin-top: 0; color: #f57f17; margin-bottom: 15px; font-size: 1rem; }
         
         .table-container { overflow-x: auto; margin-bottom: 20px; border-radius: 10px; border: 1px solid #f0e6a0; }
@@ -203,26 +87,8 @@
         .score-input { width: 70px; padding: 5px; border: 1px solid #f0e6a0; border-radius: 6px; text-align: center; }
         .score-input:focus { border-color: #f57f17; outline: none; }
         
-        .modal-overlay, .edit-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            display: none;
-        }
-        .modal, .edit-modal-content {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 450px;
-        }
+        .modal-overlay, .edit-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; display: none; }
+        .modal, .edit-modal-content { background: white; padding: 25px; border-radius: 15px; width: 90%; max-width: 450px; }
         .modal h3, .edit-modal-content h3 { margin-top: 0; color: #f57f17; margin-bottom: 20px; }
         .modal-buttons { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
         
@@ -241,23 +107,18 @@
 <body>
     <div class="container">
         <header id="mainHeader">
-           <div class="logo-left">
-    <img src="logo_oosi.jpg" alt="Logo OOSI">
-</div>
-<div class="logo-right">
-    <img src="logo_sdhp.jpg" alt="Logo SDHP">
-</div>
+            <div class="logo-left"><img src="logo_oosi.jpg" alt="Logo OOSI"></div>
+            <div class="logo-right"><img src="logo_sdhp.jpg" alt="Logo SDHP"></div>
             <h1>🗑️ APLIKASI WALL-H</h1>
             <div class="header-subtitle">SMP DARUL HIJRAH PUTERI MARTAPURA</div>
             <div class="inova-title">INOVASI PENELITIAN AJANG OPSI TAHUN 2026</div>
             <div class="header-info" id="headerInfo"></div>
         </header>
         
-        <!-- Login Section -->
         <div class="login-section" id="loginSection">
             <div class="login-box">
                 <h2>♻️ Sistem Bank Sampah Cerdas</h2>
-                <p style="color: #666; margin-bottom: 25px;">Mode Offline - Data tersimpan di browser</p>
+                <p style="color: #666; margin-bottom: 25px;">Mode Online - Data tersimpan di Cloud Firebase</p>
                 <div class="login-options">
                     <button class="login-btn" id="operatorLoginBtn">🔧 Login sebagai Operator</button>
                     <button class="login-btn" id="viewerLoginBtn">👁️ Masuk sebagai Viewer</button>
@@ -270,7 +131,6 @@
             </div>
         </div>
         
-        <!-- Operator Panel -->
         <div class="operator-panel" id="operatorPanel">
             <div class="panel-header">
                 <h2>🔧 Panel Operator - Manajemen Bank Sampah</h2>
@@ -284,12 +144,12 @@
             </div>
             
             <div class="status-bar">
-                <div><strong>Total Pengguna:</strong> <span id="totalPeserta">0</span> | <strong>Status:</strong> <span style="background:#4caf50; padding:3px 10px; border-radius:20px; color:white;">OFFLINE MODE</span></div>
-                <div><span id="saveStatus">✅ Data tersimpan di browser</span></div>
+                <div><strong>Total Pengguna:</strong> <span id="totalPeserta">0</span> | <strong>Status:</strong> <span style="background:#4caf50; padding:3px 10px; border-radius:20px; color:white;">ONLINE MODE</span></div>
+                <div><span id="saveStatus">🔄 Terhubung ke Firebase...</span></div>
             </div>
             
             <div class="info-update" style="background:#e3f2fd; padding:8px 12px; border-radius:8px; margin-bottom:15px; font-size:0.8rem; color:#1565c0;">
-                💡 Mode Offline - Semua data tersimpan di Local Storage browser. Data tetap ada meskipun browser ditutup.
+                💡 Mode Online - Data tersimpan di Cloud Firebase. Sinkron real-time dengan ESP32.
             </div>
             
             <div class="event-config" id="eventConfigSection" style="display:none;">
@@ -318,14 +178,13 @@
                     </div>
                     <div style="background:white; padding:15px; border-radius:12px;">
                         <h4>ℹ️ Informasi</h4>
-                        <p><strong>Mode:</strong> Offline (Local Storage)</p>
+                        <p><strong>Mode:</strong> Online (Firebase)</p>
                         <p><strong>Pengguna:</strong> <span id="infoPesertaCount">0</span></p>
                         <p><strong>Terakhir Update:</strong> <span id="lastUpdate">-</span></p>
                     </div>
                 </div>
             </div>
             
-            <!-- Input Manual -->
             <div class="input-section">
                 <div class="manual-input">
                     <h3>✏️ Input Data Manual</h3>
@@ -350,7 +209,6 @@
                 </div>
             </div>
             
-            <!-- Tabel -->
             <div class="panel-header" style="margin-top:0;">
                 <h2>📋 Hasil Data Kiriman dari WALL-H</h2>
                 <div class="button-group">
@@ -362,12 +220,11 @@
             <div class="table-container">
                 <table id="dataPeserta">
                     <thead><tr><th width="40">No</th><th width="130">ID Kartu</th><th width="180">Nama</th><th width="80">Kelas</th><th width="50">JK</th><th width="100">Tab/Minggu</th><th width="100">Skor</th><th width="60">Rank</th><th width="130">Aksi</th></tr></thead>
-                    <tbody id="pesertaTableBody"><tr><td colspan="9" style="text-align:center;">Memuat data...</td></tr></tbody>
+                    <tbody id="pesertaTableBody"><tr><td colspan="9" style="text-align:center;">Memuat data......</td></tr></tbody>
                 </table>
             </div>
         </div>
         
-        <!-- Viewer Panel -->
         <div class="viewer-panel" id="viewerPanel">
             <div class="panel-header"><h2>👁️ Peringkat Bank Sampah</h2><button class="btn logout-btn" id="logoutViewerBtn">🚪 Keluar</button></div>
             <div class="status-bar"><div><strong>Total:</strong> <span id="totalPesertaViewer">0</span></div></div>
@@ -375,10 +232,8 @@
             <div class="status-bar"><div>ℹ️ Target 21x tab/minggu = skor 100 | 67-100=Baik | 34-66=Sedang | 0-33=Cukup</div></div>
         </div>
         
-        <!-- Modal Reset -->
-        <div class="modal-overlay" id="resetModal"><div class="modal"><h3>⚠️ Reset Data</h3><p>Yakin menghapus SEMUA data pengguna? Tindakan ini tidak bisa dibatalkan!</p><div class="modal-buttons"><button class="btn btn-danger" id="confirmResetBtn">✅ Ya, Reset</button><button class="btn" id="cancelResetBtn">❌ Batal</button></div></div></div>
+        <div class="modal-overlay" id="resetModal"><div class="modal"><h3>⚠️ Reset Data</h3><p>Yakin menghapus SEMUA data pengguna?</p><div class="modal-buttons"><button class="btn btn-danger" id="confirmResetBtn">✅ Ya, Reset</button><button class="btn" id="cancelResetBtn">❌ Batal</button></div></div></div>
         
-        <!-- Modal Edit -->
         <div class="edit-modal" id="editModal"><div class="edit-modal-content"><h3>✏️ Edit Data Pengguna</h3>
             <div class="form-group"><label>ID Kartu</label><input type="text" id="editIdKartu" readonly style="background:#f5f5f5;"></div>
             <div class="form-group"><label>Nama</label><input type="text" id="editNama" placeholder="Nama"></div>
@@ -387,15 +242,26 @@
             <div class="modal-buttons"><button class="btn btn-success" id="saveEditBtn">💾 Simpan</button><button class="btn btn-danger" id="cancelEditBtn">❌ Batal</button></div>
         </div></div>
         
-        <footer><p>APLIKASI WALL-H | Waste Allocation & Local Loader – Healthy Environmentalist</p><p>Mode Offline - Data tersimpan di Local Storage browser</p></footer>
+        <footer><p>APLIKASI WALL-H | Waste Allocation & Local Loader – Healthy Environmentalist</p><p>Mode Online - Data tersimpan di Cloud Firebase</p></footer>
     </div>
 
     <script>
-        // ==================== KONFIGURASI ====================
-        const STORAGE_KEY = "wallh_data";
-        const CONFIG_KEY = "wallh_config";
-        const PASSWORD_KEY = "wallh_password";
+        // ==================== KONFIGURASI FIREBASE ====================
+        const firebaseConfig = {
+            apiKey: "AIzaSyCfo9o_KFhY6e7hGA_9hUML5YX7yLGd3k4",
+            authDomain: "wallh-app.firebaseapp.com",
+            databaseURL: "https://wallh-app-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "wallh-app",
+            storageBucket: "wallh-app.firebasestorage.app",
+            messagingSenderId: "700151191100",
+            appId: "1:700151191100:web:fdf35dba56fdf7a38e9539"
+        };
         
+        // Inisialisasi Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // ==================== VARIABEL ====================
         let pesertaData = [];
         let eventInfo = {
             namaSekolah: "SMP Darul Hijrah Puteri Martapura",
@@ -409,47 +275,12 @@
         let currentEditId = null;
         let uploadedExcelData = [];
         
-        // ==================== LOCAL STORAGE FUNCTIONS ====================
-        function saveToLocalStorage() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(pesertaData));
-            localStorage.setItem(CONFIG_KEY, JSON.stringify(eventInfo));
-            localStorage.setItem(PASSWORD_KEY, currentPassword);
-            document.getElementById("saveStatus").innerHTML = "✅ Data tersimpan " + new Date().toLocaleTimeString();
-            setTimeout(() => {
-                if (document.getElementById("saveStatus")) 
-                    document.getElementById("saveStatus").innerHTML = "✅ Data tersimpan di browser";
-            }, 2000);
-        }
+        // ==================== FUNGSI FIREBASE ====================
         
-        function loadFromLocalStorage() {
-            const savedData = localStorage.getItem(STORAGE_KEY);
-            if (savedData) {
-                pesertaData = JSON.parse(savedData);
-                console.log("✅ Loaded from storage:", pesertaData.length, "users");
-            } else {
-                // Data default contoh
-                pesertaData = [
-                    { id: 1, idKartu: "44.104.81.7", nama: "Aisyah Putri", kelas: "8A", jk: "P", weeklyCount: 15, skor: 0, ranking: 0 },
-                    { id: 2, idKartu: "167.76.245.99", nama: "Fatimah Azzahra", kelas: "8B", jk: "P", weeklyCount: 21, skor: 0, ranking: 0 },
-                    { id: 3, idKartu: "14.36.16.37", nama: "Zahra Aulia", kelas: "9A", jk: "P", weeklyCount: 8, skor: 0, ranking: 0 }
-                ];
-            }
-            
-            const savedConfig = localStorage.getItem(CONFIG_KEY);
-            if (savedConfig) {
-                eventInfo = JSON.parse(savedConfig);
-            }
-            
-            const savedPassword = localStorage.getItem(PASSWORD_KEY);
-            if (savedPassword) {
-                currentPassword = savedPassword;
-            }
-        }
-        
-        // ==================== FUNGSI UTAMA ====================
+        // Hitung skor dan ranking
         function hitungRanking() {
-            const target = eventInfo.targetMingguan;
-            const maxSkor = eventInfo.skorMaksimal;
+            const target = eventInfo.targetMingguan || 21;
+            const maxSkor = eventInfo.skorMaksimal || 100;
             
             pesertaData.forEach(p => {
                 const count = p.weeklyCount || 0;
@@ -473,6 +304,126 @@
             }
         }
         
+        // Simpan semua data ke Firebase
+        async function saveToFirebase() {
+            const usersRef = database.ref('users');
+            const updates = {};
+            
+            for (const user of pesertaData) {
+                updates[user.idKartu] = {
+                    uid: user.idKartu,
+                    nama: user.nama,
+                    kelas: user.kelas,
+                    jk: user.jk,
+                    weeklyCount: user.weeklyCount || 0,
+                    skor: user.skor || 0,
+                    ranking: user.ranking || 0
+                };
+            }
+            
+            await usersRef.update(updates);
+            await database.ref('system').update({
+                namaSekolah: eventInfo.namaSekolah,
+                predikat: eventInfo.predikat,
+                targetMingguan: eventInfo.targetMingguan,
+                skorMaksimal: eventInfo.skorMaksimal
+            });
+            
+            document.getElementById("saveStatus").innerHTML = "✅ Data tersimpan di Firebase " + new Date().toLocaleTimeString();
+            setTimeout(() => {
+                if (document.getElementById("saveStatus")) 
+                    document.getElementById("saveStatus").innerHTML = "✅ Terhubung ke Firebase";
+            }, 3000);
+        }
+        
+        // Load data dari Firebase
+        async function loadFromFirebase() {
+            try {
+                document.getElementById("saveStatus").innerHTML = "🔄 Memuat data dari Firebase...";
+                
+                const usersSnapshot = await database.ref('users').once('value');
+                if (usersSnapshot.exists()) {
+                    const usersObj = usersSnapshot.val();
+                    pesertaData = Object.keys(usersObj).map((key, index) => ({
+                        id: index + 1,
+                        idKartu: key,
+                        nama: usersObj[key].nama || "",
+                        kelas: usersObj[key].kelas || "",
+                        jk: usersObj[key].jk || "",
+                        weeklyCount: usersObj[key].weeklyCount || 0,
+                        skor: usersObj[key].skor || 0,
+                        ranking: usersObj[key].ranking || 0
+                    }));
+                } else {
+                    pesertaData = [];
+                }
+                
+                const systemSnapshot = await database.ref('system').once('value');
+                if (systemSnapshot.exists()) {
+                    const sys = systemSnapshot.val();
+                    eventInfo.namaSekolah = sys.namaSekolah || eventInfo.namaSekolah;
+                    eventInfo.predikat = sys.predikat || eventInfo.predikat;
+                    eventInfo.targetMingguan = sys.targetMingguan || 21;
+                    eventInfo.skorMaksimal = sys.skorMaksimal || 100;
+                }
+                
+                hitungRanking();
+                updateHeaderInfo();
+                updateOperatorTable();
+                if (isViewerLoggedIn) updateViewerTable();
+                
+                document.getElementById("saveStatus").innerHTML = "✅ Terhubung ke Firebase";
+            } catch (error) {
+                console.error("Error loading:", error);
+                document.getElementById("saveStatus").innerHTML = "⚠️ Gagal terhubung ke Firebase";
+            }
+        }
+        
+        // Setup realtime listener
+        function setupRealtimeListener() {
+            database.ref('users').on('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    const usersObj = snapshot.val();
+                    const newData = Object.keys(usersObj).map((key, index) => ({
+                        id: index + 1,
+                        idKartu: key,
+                        nama: usersObj[key].nama || "",
+                        kelas: usersObj[key].kelas || "",
+                        jk: usersObj[key].jk || "",
+                        weeklyCount: usersObj[key].weeklyCount || 0,
+                        skor: usersObj[key].skor || 0,
+                        ranking: usersObj[key].ranking || 0
+                    }));
+                    
+                    if (JSON.stringify(pesertaData) !== JSON.stringify(newData)) {
+                        pesertaData = newData;
+                        hitungRanking();
+                        updateOperatorTable();
+                        if (isViewerLoggedIn) updateViewerTable();
+                        document.getElementById("saveStatus").innerHTML = "✅ Data diperbarui " + new Date().toLocaleTimeString();
+                        setTimeout(() => {
+                            if (document.getElementById("saveStatus")) 
+                                document.getElementById("saveStatus").innerHTML = "✅ Terhubung ke Firebase";
+                        }, 2000);
+                    }
+                }
+            });
+            
+            database.ref('system').on('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    const sys = snapshot.val();
+                    eventInfo.namaSekolah = sys.namaSekolah || eventInfo.namaSekolah;
+                    eventInfo.predikat = sys.predikat || eventInfo.predikat;
+                    eventInfo.targetMingguan = sys.targetMingguan || 21;
+                    eventInfo.skorMaksimal = sys.skorMaksimal || 100;
+                    updateHeaderInfo();
+                    updateOperatorTable();
+                    if (isViewerLoggedIn) updateViewerTable();
+                }
+            });
+        }
+        
+        // ==================== FUNGSI UI ====================
         function updateHeaderInfo() {
             document.getElementById("headerInfo").innerHTML = `
                 <div class="info-item"><div class="info-label">🏫 Sekolah</div><div class="info-value">${eventInfo.namaSekolah}</div></div>
@@ -508,10 +459,10 @@
                     <td><strong>${p.nama || ''}</strong></td>
                     <td>${p.kelas || ''}</td>
                     <td>${p.jk || ''}</td>
-                    <td><input type="number" class="score-input" data-id="${p.id}" value="${p.weeklyCount || 0}" min="0" max="100" step="1" style="width:70px;"></td>
+                    <td><input type="number" class="score-input" data-id="${p.idKartu}" value="${p.weeklyCount || 0}" min="0" max="100" step="1" style="width:70px;"></td>
                     <td class="${p.skor >= 67 ? 'best-score' : ''}">${p.skor || 0} / ${maxSkor}</td>
                     <td>${p.ranking || 0}</td>
-                    <td><button class="btn btn-edit btn-sm edit-user" data-id="${p.id}" style="padding:4px 8px;">✏️ Edit</button> <button class="btn btn-danger btn-sm hapus-peserta" data-id="${p.id}" style="padding:4px 8px;">🗑️</button></td>
+                    <td><button class="btn btn-edit btn-sm edit-user" data-id="${p.idKartu}" style="padding:4px 8px;">✏️ Edit</button> <button class="btn btn-danger btn-sm hapus-peserta" data-id="${p.idKartu}" style="padding:4px 8px;">🗑️</button></td>
                 `;
             });
             
@@ -520,14 +471,15 @@
             document.getElementById("lastUpdate").innerText = new Date().toLocaleString();
             
             document.querySelectorAll(".score-input").forEach(inp => {
-                inp.addEventListener("change", function() {
-                    const id = parseInt(this.dataset.id);
-                    const idx = pesertaData.findIndex(p => p.id === id);
-                    if (idx !== -1) {
-                        pesertaData[idx].weeklyCount = parseInt(this.value) || 0;
+                inp.addEventListener("change", async function() {
+                    const idKartu = this.dataset.id;
+                    const val = parseInt(this.value) || 0;
+                    const index = pesertaData.findIndex(p => p.idKartu === idKartu);
+                    if (index !== -1) {
+                        pesertaData[index].weeklyCount = val;
                         hitungRanking();
+                        await saveToFirebase();
                         updateOperatorTable();
-                        saveToLocalStorage();
                         if (isViewerLoggedIn) updateViewerTable();
                     }
                 });
@@ -535,19 +487,19 @@
             
             document.querySelectorAll(".edit-user").forEach(btn => {
                 btn.addEventListener("click", function() {
-                    const id = parseInt(this.dataset.id);
-                    openEditModal(id);
+                    const idKartu = this.dataset.id;
+                    openEditModal(idKartu);
                 });
             });
             
             document.querySelectorAll(".hapus-peserta").forEach(btn => {
                 btn.addEventListener("click", async function() {
                     if (confirm("Hapus pengguna ini?")) {
-                        const id = parseInt(this.dataset.id);
-                        pesertaData = pesertaData.filter(p => p.id !== id);
+                        const idKartu = this.dataset.id;
+                        pesertaData = pesertaData.filter(p => p.idKartu !== idKartu);
                         hitungRanking();
+                        await saveToFirebase();
                         updateOperatorTable();
-                        saveToLocalStorage();
                         if (isViewerLoggedIn) updateViewerTable();
                     }
                 });
@@ -586,8 +538,8 @@
             document.getElementById("totalPesertaViewer").innerText = pesertaData.length;
         }
         
-        // ==================== CRUD OPERATIONS ====================
-        function tambahUser() {
+        // ==================== CRUD ====================
+        async function tambahUser() {
             const idKartu = document.getElementById("idKartu").value.trim();
             const nama = document.getElementById("namaPengguna").value.trim();
             const kelas = document.getElementById("kelas").value;
@@ -603,9 +555,7 @@
                 return;
             }
             
-            const newId = pesertaData.length > 0 ? Math.max(...pesertaData.map(p => p.id)) + 1 : 1;
             pesertaData.push({
-                id: newId,
                 idKartu: idKartu,
                 nama: nama,
                 kelas: kelas,
@@ -616,8 +566,8 @@
             });
             
             hitungRanking();
+            await saveToFirebase();
             updateOperatorTable();
-            saveToLocalStorage();
             if (isViewerLoggedIn) updateViewerTable();
             
             document.getElementById("idKartu").value = "";
@@ -628,10 +578,10 @@
             alert(`✅ Pengguna "${nama}" berhasil ditambahkan!`);
         }
         
-        function openEditModal(id) {
-            const user = pesertaData.find(p => p.id === id);
+        function openEditModal(idKartu) {
+            const user = pesertaData.find(p => p.idKartu === idKartu);
             if (!user) return;
-            currentEditId = id;
+            currentEditId = idKartu;
             document.getElementById("editIdKartu").value = user.idKartu;
             document.getElementById("editNama").value = user.nama;
             document.getElementById("editKelas").value = user.kelas;
@@ -639,7 +589,7 @@
             document.getElementById("editModal").style.display = "flex";
         }
         
-        function saveEditUser() {
+        async function saveEditUser() {
             const newNama = document.getElementById("editNama").value.trim();
             const newKelas = document.getElementById("editKelas").value;
             const newJk = document.getElementById("editJk").value;
@@ -649,14 +599,14 @@
                 return;
             }
             
-            const index = pesertaData.findIndex(p => p.id === currentEditId);
+            const index = pesertaData.findIndex(p => p.idKartu === currentEditId);
             if (index !== -1) {
                 pesertaData[index].nama = newNama;
                 pesertaData[index].kelas = newKelas;
                 pesertaData[index].jk = newJk;
                 hitungRanking();
+                await saveToFirebase();
                 updateOperatorTable();
-                saveToLocalStorage();
                 if (isViewerLoggedIn) updateViewerTable();
                 alert("✅ Data berhasil diupdate!");
                 closeEditModal();
@@ -668,17 +618,7 @@
             currentEditId = null;
         }
         
-        function resetAllData() {
-            pesertaData = [];
-            hitungRanking();
-            updateOperatorTable();
-            saveToLocalStorage();
-            if (isViewerLoggedIn) updateViewerTable();
-            document.getElementById("resetModal").style.display = "none";
-            alert("✅ Semua data telah direset!");
-        }
-        
-        function updateEventInfo() {
+        async function updateEventInfo() {
             eventInfo.namaSekolah = document.getElementById("namaSekolah").value;
             eventInfo.predikat = document.getElementById("predikat").value;
             eventInfo.targetMingguan = parseInt(document.getElementById("targetMingguan").value);
@@ -687,8 +627,17 @@
             hitungRanking();
             updateOperatorTable();
             if (isViewerLoggedIn) updateViewerTable();
-            saveToLocalStorage();
+            await saveToFirebase();
             alert("✅ Informasi sekolah diperbarui!");
+        }
+        
+        async function resetAllData() {
+            pesertaData = [];
+            await saveToFirebase();
+            updateOperatorTable();
+            if (isViewerLoggedIn) updateViewerTable();
+            document.getElementById("resetModal").style.display = "none";
+            alert("✅ Semua data telah direset!");
         }
         
         function changePassword() {
@@ -705,13 +654,13 @@
             }
             
             currentPassword = newPass;
-            saveToLocalStorage();
+            localStorage.setItem("wallh_password", currentPassword);
             alert("✅ Password berhasil diubah!");
             document.getElementById("newPassword").value = "";
             document.getElementById("confirmPassword").value = "";
         }
         
-        // ==================== EXPORT FUNCTIONS ====================
+        // ==================== EXPORT ====================
         function exportToExcel() {
             if (pesertaData.length === 0) { alert("Tidak ada data!"); return; }
             const data = [["No","ID Kartu","Nama","Kelas","JK","Tab Minggu Ini","Skor","Ranking"]];
@@ -770,15 +719,14 @@
             reader.readAsArrayBuffer(file);
         }
         
-        function importExcelData() {
+        async function importExcelData() {
             if (uploadedExcelData.length === 0) { alert("Tidak ada data!"); return; }
             const existing = pesertaData.map(p => p.idKartu);
             const newData = uploadedExcelData.filter(d => !existing.includes(d.idKartu));
             if (newData.length === 0) { alert("Semua data sudah ada!"); return; }
-            const maxId = pesertaData.length ? Math.max(...pesertaData.map(p => p.id)) : 0;
-            newData.forEach((d, i) => {
+            
+            newData.forEach(d => {
                 pesertaData.push({
-                    id: maxId + i + 1,
                     idKartu: d.idKartu,
                     nama: d.nama,
                     kelas: d.kelas,
@@ -788,9 +736,10 @@
                     ranking: 0
                 });
             });
+            
             hitungRanking();
+            await saveToFirebase();
             updateOperatorTable();
-            saveToLocalStorage();
             if (isViewerLoggedIn) updateViewerTable();
             alert(`✅ ${newData.length} pengguna berhasil diimport!`);
             clearPreview();
@@ -806,28 +755,21 @@
         
         function downloadTemplate() {
             const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.aoa_to_sheet([["ID_Kartu","Nama","Kelas","JK"],["44.104.81.7","Aisyah Putri","8A","P"],["167.76.245.99","Fatimah","8B","P"]]);
+            const ws = XLSX.utils.aoa_to_sheet([["ID_Kartu","Nama","Kelas","JK"],["44.104.81.7","Aisyah Putri","8A","P"]]);
             XLSX.utils.book_append_sheet(wb, ws, "Template");
             XLSX.writeFile(wb, "template_wallh.xlsx");
         }
         
-        // ==================== INIT & EVENT ====================
-        function refreshAllData() {
-            loadFromLocalStorage();
-            hitungRanking();
-            updateOperatorTable();
-            if (isViewerLoggedIn) updateViewerTable();
-            updateHeaderInfo();
-            alert("✅ Data dimuat ulang!");
+        function refreshData() {
+            loadFromFirebase();
+            alert("🔄 Data sedang dimuat ulang dari Firebase!");
         }
         
+        // ==================== EVENT LISTENERS ====================
         document.addEventListener("DOMContentLoaded", () => {
-            loadFromLocalStorage();
-            hitungRanking();
-            updateHeaderInfo();
-            updateOperatorTable();
+            loadFromFirebase();
+            setupRealtimeListener();
             
-            // Login
             document.getElementById("operatorLoginBtn").onclick = () => document.getElementById("passwordSection").style.display = "block";
             document.getElementById("backToLoginBtn").onclick = () => document.getElementById("passwordSection").style.display = "none";
             document.getElementById("submitPasswordBtn").onclick = () => {
@@ -835,7 +777,7 @@
                     isOperatorLoggedIn = true;
                     document.getElementById("loginSection").style.display = "none";
                     document.getElementById("operatorPanel").style.display = "block";
-                    refreshAllData();
+                    loadFromFirebase();
                 } else alert("❌ Password salah!");
             };
             document.getElementById("viewerLoginBtn").onclick = () => {
@@ -845,18 +787,13 @@
                 updateViewerTable();
             };
             
-            // Logout
             document.getElementById("logoutOperatorBtn").onclick = () => location.reload();
             document.getElementById("logoutViewerBtn").onclick = () => location.reload();
-            
-            // CRUD
             document.getElementById("tambahPesertaBtn").onclick = tambahUser;
             document.getElementById("saveEditBtn").onclick = saveEditUser;
             document.getElementById("cancelEditBtn").onclick = closeEditModal;
-            
-            // Settings
-            document.getElementById("refreshDataBtn").onclick = refreshAllData;
-            document.getElementById("refreshTableBtn").onclick = refreshAllData;
+            document.getElementById("refreshDataBtn").onclick = refreshData;
+            document.getElementById("refreshTableBtn").onclick = refreshData;
             document.getElementById("settingsBtn").onclick = () => {
                 const s = document.getElementById("settingsSection");
                 s.style.display = s.style.display === "none" ? "block" : "none";
@@ -868,17 +805,11 @@
             document.getElementById("showSettingsBtn").onclick = () => document.getElementById("settingsSection").style.display = "block";
             document.getElementById("updateEventBtn").onclick = updateEventInfo;
             document.getElementById("savePasswordBtn").onclick = changePassword;
-            
-            // Export
             document.getElementById("exportExcelBtn").onclick = exportToExcel;
             document.getElementById("exportPDFBtn").onclick = exportToPDF;
-            
-            // Reset
             document.getElementById("resetDataBtn").onclick = () => document.getElementById("resetModal").style.display = "flex";
             document.getElementById("confirmResetBtn").onclick = resetAllData;
             document.getElementById("cancelResetBtn").onclick = () => document.getElementById("resetModal").style.display = "none";
-            
-            // Excel import
             document.getElementById("excelFile").onchange = handleFileUpload;
             document.getElementById("uploadExcelBtn").onclick = importExcelData;
             document.getElementById("clearPreviewBtn").onclick = clearPreview;
