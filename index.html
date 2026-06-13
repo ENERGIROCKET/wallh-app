@@ -120,6 +120,13 @@
             85% { opacity: 1; transform: translateY(0); }
             100% { opacity: 0; transform: translateY(20px); }
         }
+        
+        /* Peringatan ID Kartu */
+        .id-warning {
+            font-size: 0.7rem;
+            color: #f57f17;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -169,7 +176,8 @@
             </div>
             
             <div class="info-update" style="background:#e3f2fd; padding:8px 12px; border-radius:8px; margin-bottom:15px; font-size:0.8rem; color:#1565c0;">
-                💡 Mode Online - Data tersimpan di Cloud Firebase. Sinkron real-time dengan ESP32.
+                💡 Mode Online - Data tersimpan di Cloud Firebase. Sinkron real-time dengan ESP32.<br>
+                ⚠️ <strong>ID Kartu tidak boleh mengandung titik (.)</strong> - Gunakan angka tanpa titik (contoh: 44104817)
             </div>
             
             <div class="event-config" id="eventConfigSection" style="display:none;">
@@ -210,8 +218,9 @@
                 <div class="manual-input">
                     <h3>✏️ Input Data Manual</h3>
                     <div class="form-group">
-                        <label>ID Kartu RFID</label>
-                        <input type="text" id="idKartu" placeholder="Contoh: 44.104.81.7">
+                        <label>ID Kartu RFID (tanpa titik)</label>
+                        <input type="text" id="idKartu" placeholder="Contoh: 44104817">
+                        <div class="id-warning">⚠️ ID Kartu tidak boleh mengandung titik (.)</div>
                     </div>
                     <div class="form-group">
                         <label>Nama Pengguna</label>
@@ -297,7 +306,7 @@
             <div class="table-container">
                 <table id="dataPesertaViewer">
                     <thead><tr><th>Rank</th><th>ID Kartu</th><th>Nama</th><th>Kelas</th><th>JK</th><th>Tab/Minggu</th><th>Skor</th></tr></thead>
-                    <tbody id="pesertaTableBodyViewer"><tr><td colspan="7">Memuat...</td</tr></tbody>
+                    <tbody id="pesertaTableBodyViewer"><tr><td colspan="7">Memuat...</td</table></tbody>
                 </table>
             </div>
             <div class="status-bar"><div>ℹ️ Target 21x tab/minggu = skor 100 | 67-100=Baik | 34-66=Sedang | 0-33=Cukup</div></div>
@@ -416,8 +425,9 @@
             try {
                 // Simpan users satu per satu
                 for (const user of pesertaData) {
-                    await database.ref('users/' + user.idKartu).set({
-                        uid: user.idKartu,
+                    let cleanId = user.idKartu.replace(/\./g, "");
+                    await database.ref('users/' + cleanId).set({
+                        uid: cleanId,
                         nama: user.nama,
                         kelas: user.kelas,
                         jk: user.jk,
@@ -427,7 +437,6 @@
                     });
                 }
                 
-                // Simpan system info
                 await database.ref('system').set({
                     namaSekolah: eventInfo.namaSekolah,
                     predikat: eventInfo.predikat,
@@ -517,7 +526,6 @@
                     document.getElementById("totalPeserta").innerText = pesertaData.length;
                     document.getElementById("infoPesertaCount").innerText = pesertaData.length;
                     document.getElementById("totalPesertaViewer").innerText = pesertaData.length;
-                    showToast("Data diperbarui!");
                 }
             });
             
@@ -577,7 +585,6 @@
                 `;
             });
             
-            // Event listeners
             document.querySelectorAll(".score-input").forEach(inp => {
                 inp.removeEventListener('change', handleScoreChange);
                 inp.addEventListener('change', handleScoreChange);
@@ -654,13 +661,23 @@
         
         // ==================== CRUD FUNCTIONS ====================
         async function tambahUser() {
-            const idKartu = document.getElementById("idKartu").value.trim();
+            let idKartu = document.getElementById("idKartu").value.trim();
             const nama = document.getElementById("namaPengguna").value.trim();
             const kelas = document.getElementById("kelas").value;
             const jk = document.getElementById("jenisKelamin").value;
             
+            // HAPUS SEMUA TITIK (.) dari ID Kartu
+            idKartu = idKartu.replace(/\./g, "");
+            
             if (!idKartu || !nama || !kelas || !jk) {
                 alert("❌ Harap isi semua data!");
+                return;
+            }
+            
+            // Validasi karakter yang tidak diizinkan Firebase
+            const invalidChars = /[.#$\[\]]/;
+            if (invalidChars.test(idKartu)) {
+                alert("❌ ID Kartu tidak boleh mengandung karakter: . # $ [ ]");
                 return;
             }
             
@@ -688,7 +705,7 @@
                 document.getElementById("namaPengguna").value = "";
                 document.getElementById("kelas").value = "";
                 document.getElementById("jenisKelamin").value = "";
-                alert(`✅ Pengguna "${nama}" berhasil ditambahkan!`);
+                alert(`✅ Pengguna "${nama}" berhasil ditambahkan! (ID: ${idKartu})`);
                 showToast(`✅ ${nama} ditambahkan!`);
             } else {
                 alert("❌ Gagal menyimpan ke Firebase!");
@@ -785,7 +802,7 @@
         }
         
         function exportToPDF() {
-            if (pesertaData.length === 0) { alert("Tidak ada数据!"); return; }
+            if (pesertaData.length === 0) { alert("Tidak ada data!"); return; }
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('landscape');
             doc.text("LAPORAN BANK SAMPAH WALL-H", 14, 15);
@@ -815,6 +832,11 @@
                         kelas: r.Kelas || r.kelas || "",
                         jk: r.JK || r.jk || ""
                     })).filter(r => r.idKartu);
+                    
+                    // Hapus titik dari ID Kartu
+                    uploadedExcelData.forEach(r => {
+                        r.idKartu = r.idKartu.replace(/\./g, "");
+                    });
                     
                     if (uploadedExcelData.length) {
                         let html = '<table style="width:100%"><tr style="background:#f0e6a0;"><th>ID</th><th>Nama</th><th>Kelas</th><th>JK</th></tr>';
@@ -867,7 +889,7 @@
         
         function downloadTemplate() {
             const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.aoa_to_sheet([["ID_Kartu","Nama","Kelas","JK"],["44.104.81.7","Aisyah Putri","8A","P"]]);
+            const ws = XLSX.utils.aoa_to_sheet([["ID_Kartu","Nama","Kelas","JK"],["44104817","Aisyah Putri","8A","P"]]);
             XLSX.utils.book_append_sheet(wb, ws, "Template");
             XLSX.writeFile(wb, "template_wallh.xlsx");
         }
