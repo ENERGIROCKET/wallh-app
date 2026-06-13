@@ -102,6 +102,25 @@
         .upload-status.success { background: #d4edda; color: #155724; }
         .upload-status.error { background: #f8d7da; color: #721c24; }
         .btn-sm { padding: 4px 8px; font-size: 0.7rem; }
+        
+        /* Tambahan untuk pesan error/success */
+        .toast-message {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 2000;
+            animation: fadeInOut 3s ease;
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(20px); }
+            15% { opacity: 1; transform: translateY(0); }
+            85% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(20px); }
+        }
     </style>
 </head>
 <body>
@@ -115,6 +134,7 @@
             <div class="header-info" id="headerInfo"></div>
         </header>
         
+        <!-- Login Section -->
         <div class="login-section" id="loginSection">
             <div class="login-box">
                 <h2>♻️ Sistem Bank Sampah Cerdas</h2>
@@ -131,6 +151,7 @@
             </div>
         </div>
         
+        <!-- Operator Panel -->
         <div class="operator-panel" id="operatorPanel">
             <div class="panel-header">
                 <h2>🔧 Panel Operator - Manajemen Bank Sampah</h2>
@@ -185,16 +206,46 @@
                 </div>
             </div>
             
+            <!-- Input Manual -->
             <div class="input-section">
                 <div class="manual-input">
                     <h3>✏️ Input Data Manual</h3>
-                    <div class="form-group"><label>ID Kartu RFID</label><input type="text" id="idKartu" placeholder="Contoh: 44.104.81.7"></div>
-                    <div class="form-group"><label>Nama Pengguna</label><input type="text" id="namaPengguna" placeholder="Nama lengkap"></div>
-                    <div class="form-row">
-                        <div class="form-group"><label>Kelas</label><select id="kelas"><option value="">Pilih</option><option>7A</option><option>7B</option><option>7C</option><option>8A</option><option>8B</option><option>8C</option><option>9A</option><option>9B</option><option>9C</option><option>GURU</option><option>STAFF</option></select></div>
-                        <div class="form-group"><label>JK</label><select id="jenisKelamin"><option value="">Pilih</option><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></div>
+                    <div class="form-group">
+                        <label>ID Kartu RFID</label>
+                        <input type="text" id="idKartu" placeholder="Contoh: 44.104.81.7">
                     </div>
-                    <button class="btn btn-success" id="tambahPesertaBtn">➕ Tambah Pengguna</button>
+                    <div class="form-group">
+                        <label>Nama Pengguna</label>
+                        <input type="text" id="namaPengguna" placeholder="Nama lengkap">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Kelas</label>
+                            <select id="kelas">
+                                <option value="">Pilih Kelas</option>
+                                <option value="7A">7A</option>
+                                <option value="7B">7B</option>
+                                <option value="7C">7C</option>
+                                <option value="8A">8A</option>
+                                <option value="8B">8B</option>
+                                <option value="8C">8C</option>
+                                <option value="9A">9A</option>
+                                <option value="9B">9B</option>
+                                <option value="9C">9C</option>
+                                <option value="GURU">GURU</option>
+                                <option value="STAFF">STAFF</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>JK</label>
+                            <select id="jenisKelamin">
+                                <option value="">Pilih</option>
+                                <option value="L">Laki-laki</option>
+                                <option value="P">Perempuan</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-success" id="tambahPesertaBtn" style="width:100%; margin-top:10px;">➕ Tambah Pengguna</button>
                 </div>
                 
                 <div class="file-upload">
@@ -209,6 +260,7 @@
                 </div>
             </div>
             
+            <!-- Tabel -->
             <div class="panel-header" style="margin-top:0;">
                 <h2>📋 Hasil Data Kiriman dari WALL-H</h2>
                 <div class="button-group">
@@ -219,30 +271,79 @@
             
             <div class="table-container">
                 <table id="dataPeserta">
-                    <thead><tr><th width="40">No</th><th width="130">ID Kartu</th><th width="180">Nama</th><th width="80">Kelas</th><th width="50">JK</th><th width="100">Tab/Minggu</th><th width="100">Skor</th><th width="60">Rank</th><th width="130">Aksi</th></tr></thead>
-                    <tbody id="pesertaTableBody"><tr><td colspan="9" style="text-align:center;">Memuat data...</td></tr></tbody>
+                    <thead>
+                        <tr>
+                            <th width="40">No</th>
+                            <th width="130">ID Kartu</th>
+                            <th width="180">Nama</th>
+                            <th width="80">Kelas</th>
+                            <th width="50">JK</th>
+                            <th width="100">Tab/Minggu</th>
+                            <th width="100">Skor</th>
+                            <th width="60">Rank</th>
+                            <th width="130">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pesertaTableBody">
+                        <tr><td colspan="9" style="text-align:center;">Memuat data...</td></tr>
+                    </tbody>
                 </table>
             </div>
         </div>
         
+        <!-- Viewer Panel -->
         <div class="viewer-panel" id="viewerPanel">
             <div class="panel-header"><h2>👁️ Peringkat Bank Sampah</h2><button class="btn logout-btn" id="logoutViewerBtn">🚪 Keluar</button></div>
             <div class="status-bar"><div><strong>Total:</strong> <span id="totalPesertaViewer">0</span></div></div>
-            <div class="table-container"><table id="dataPesertaViewer"><thead><tr><th>Rank</th><th>ID Kartu</th><th>Nama</th><th>Kelas</th><th>JK</th><th>Tab/Minggu</th><th>Skor</th></tr></thead><tbody id="pesertaTableBodyViewer"><tr><td colspan="7">Memuat...</td></tr></tbody></table></div>
+            <div class="table-container">
+                <table id="dataPesertaViewer">
+                    <thead><tr><th>Rank</th><th>ID Kartu</th><th>Nama</th><th>Kelas</th><th>JK</th><th>Tab/Minggu</th><th>Skor</th></tr></thead>
+                    <tbody id="pesertaTableBodyViewer"><tr><td colspan="7">Memuat...</td></tr></tbody>
+                </table>
+            </div>
             <div class="status-bar"><div>ℹ️ Target 21x tab/minggu = skor 100 | 67-100=Baik | 34-66=Sedang | 0-33=Cukup</div></div>
         </div>
         
-        <div class="modal-overlay" id="resetModal"><div class="modal"><h3>⚠️ Reset Data</h3><p>Yakin menghapus SEMUA data pengguna?</p><div class="modal-buttons"><button class="btn btn-danger" id="confirmResetBtn">✅ Ya, Reset</button><button class="btn" id="cancelResetBtn">❌ Batal</button></div></div></div>
+        <!-- Modal Reset -->
+        <div class="modal-overlay" id="resetModal">
+            <div class="modal">
+                <h3>⚠️ Reset Data</h3>
+                <p>Yakin menghapus SEMUA data pengguna? Tindakan ini tidak bisa dibatalkan!</p>
+                <div class="modal-buttons">
+                    <button class="btn btn-danger" id="confirmResetBtn">✅ Ya, Reset</button>
+                    <button class="btn" id="cancelResetBtn">❌ Batal</button>
+                </div>
+            </div>
+        </div>
         
-        <div class="edit-modal" id="editModal"><div class="edit-modal-content"><h3>✏️ Edit Data Pengguna</h3>
-            <div class="form-group"><label>ID Kartu</label><input type="text" id="editIdKartu" readonly style="background:#f5f5f5;"></div>
-            <div class="form-group"><label>Nama</label><input type="text" id="editNama" placeholder="Nama"></div>
-            <div class="form-group"><label>Kelas</label><select id="editKelas"><option>7A</option><option>7B</option><option>7C</option><option>8A</option><option>8B</option><option>8C</option><option>9A</option><option>9B</option><option>9C</option><option>GURU</option><option>STAFF</option></select></div>
-            <div class="form-group"><label>JK</label><select id="editJk"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></div>
-            <div class="modal-buttons"><button class="btn btn-success" id="saveEditBtn">💾 Simpan</button><button class="btn btn-danger" id="cancelEditBtn">❌ Batal</button></div>
-        </div></div>
+        <!-- Modal Edit -->
+        <div class="edit-modal" id="editModal">
+            <div class="edit-modal-content">
+                <h3>✏️ Edit Data Pengguna</h3>
+                <div class="form-group"><label>ID Kartu</label><input type="text" id="editIdKartu" readonly style="background:#f5f5f5;"></div>
+                <div class="form-group"><label>Nama</label><input type="text" id="editNama" placeholder="Nama"></div>
+                <div class="form-group"><label>Kelas</label>
+                    <select id="editKelas">
+                        <option>7A</option><option>7B</option><option>7C</option>
+                        <option>8A</option><option>8B</option><option>8C</option>
+                        <option>9A</option><option>9B</option><option>9C</option>
+                        <option>GURU</option><option>STAFF</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>JK</label>
+                    <select id="editJk"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-success" id="saveEditBtn">💾 Simpan</button>
+                    <button class="btn btn-danger" id="cancelEditBtn">❌ Batal</button>
+                </div>
+            </div>
+        </div>
         
-        <footer><p>APLIKASI WALL-H | Waste Allocation & Local Loader – Healthy Environmentalist</p><p>Mode Online - Data tersimpan di Cloud Firebase</p></footer>
+        <footer>
+            <p>APLIKASI WALL-H | Waste Allocation & Local Loader – Healthy Environmentalist</p>
+            <p>Mode Online - Data tersimpan di Cloud Firebase</p>
+        </footer>
     </div>
 
     <script>
@@ -274,6 +375,16 @@
         let isViewerLoggedIn = false;
         let currentEditId = null;
         let uploadedExcelData = [];
+        
+        // Fungsi toast notifikasi
+        function showToast(message, isError = false) {
+            const toast = document.createElement('div');
+            toast.className = 'toast-message';
+            toast.textContent = message;
+            toast.style.background = isError ? '#f44336' : '#4caf50';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
         
         // ==================== FUNGSI HITUNG SKOR & RANKING ====================
         function hitungRanking() {
@@ -333,9 +444,11 @@
                     if (document.getElementById("saveStatus")) 
                         document.getElementById("saveStatus").innerHTML = "✅ Terhubung ke Firebase";
                 }, 2000);
+                return true;
             } catch (error) {
                 console.error("Save error:", error);
                 document.getElementById("saveStatus").innerHTML = "⚠️ Gagal simpan";
+                return false;
             }
         }
         
@@ -344,7 +457,6 @@
             try {
                 document.getElementById("saveStatus").innerHTML = "🔄 Memuat data...";
                 
-                // Load users
                 const usersSnapshot = await database.ref('users').once('value');
                 if (usersSnapshot.exists()) {
                     const usersObj = usersSnapshot.val();
@@ -359,16 +471,9 @@
                         ranking: usersObj[key].ranking || 0
                     }));
                 } else {
-                    // Data default jika kosong
-                    pesertaData = [
-                        { id: 1, idKartu: "44.104.81.7", nama: "Aisyah Putri", kelas: "8A", jk: "P", weeklyCount: 15, skor: 0, ranking: 0 },
-                        { id: 2, idKartu: "167.76.245.99", nama: "Fatimah Azzahra", kelas: "8B", jk: "P", weeklyCount: 21, skor: 0, ranking: 0 },
-                        { id: 3, idKartu: "14.36.16.37", nama: "Zahra Aulia", kelas: "9A", jk: "P", weeklyCount: 8, skor: 0, ranking: 0 }
-                    ];
-                    await saveToFirebase();
+                    pesertaData = [];
                 }
                 
-                // Load system info
                 const systemSnapshot = await database.ref('system').once('value');
                 if (systemSnapshot.exists()) {
                     const sys = systemSnapshot.val();
@@ -384,9 +489,11 @@
                 if (isViewerLoggedIn) updateViewerTable();
                 
                 document.getElementById("saveStatus").innerHTML = "✅ Terhubung ke Firebase";
+                return true;
             } catch (error) {
                 console.error("Load error:", error);
                 document.getElementById("saveStatus").innerHTML = "⚠️ Gagal koneksi";
+                return false;
             }
         }
         
@@ -406,17 +513,15 @@
                         ranking: usersObj[key].ranking || 0
                     }));
                     
-                    if (JSON.stringify(pesertaData) !== JSON.stringify(newData)) {
-                        pesertaData = newData;
-                        hitungRanking();
-                        updateOperatorTable();
-                        if (isViewerLoggedIn) updateViewerTable();
-                        document.getElementById("saveStatus").innerHTML = "✅ Data diperbarui " + new Date().toLocaleTimeString();
-                        setTimeout(() => {
-                            if (document.getElementById("saveStatus")) 
-                                document.getElementById("saveStatus").innerHTML = "✅ Terhubung ke Firebase";
-                        }, 1500);
-                    }
+                    pesertaData = newData;
+                    hitungRanking();
+                    updateOperatorTable();
+                    if (isViewerLoggedIn) updateViewerTable();
+                    document.getElementById("saveStatus").innerHTML = "✅ Data diperbarui " + new Date().toLocaleTimeString();
+                    setTimeout(() => {
+                        if (document.getElementById("saveStatus")) 
+                            document.getElementById("saveStatus").innerHTML = "✅ Terhubung ke Firebase";
+                    }, 1500);
                 }
             });
             
@@ -473,7 +578,10 @@
                     <td><input type="number" class="score-input" data-id="${p.idKartu}" value="${p.weeklyCount || 0}" min="0" max="100" step="1" style="width:70px;"></td>
                     <td class="${p.skor >= 67 ? 'best-score' : ''}">${p.skor || 0} / ${maxSkor}</td>
                     <td>${p.ranking || 0}</td>
-                    <td><button class="btn btn-edit btn-sm edit-user" data-id="${p.idKartu}" style="padding:4px 8px;">✏️ Edit</button> <button class="btn btn-danger btn-sm hapus-peserta" data-id="${p.idKartu}" style="padding:4px 8px;">🗑️</button></td>
+                    <td>
+                        <button class="btn btn-edit btn-sm edit-user" data-id="${p.idKartu}" style="padding:4px 8px;">✏️ Edit</button>
+                        <button class="btn btn-danger btn-sm hapus-peserta" data-id="${p.idKartu}" style="padding:4px 8px;">🗑️ Hapus</button>
+                    </td>
                 `;
             });
             
@@ -481,7 +589,7 @@
             document.getElementById("infoPesertaCount").innerText = pesertaData.length;
             document.getElementById("lastUpdate").innerText = new Date().toLocaleString();
             
-            // Event listeners untuk input score
+            // Event listeners
             document.querySelectorAll(".score-input").forEach(inp => {
                 inp.removeEventListener('change', handleScoreChange);
                 inp.addEventListener('change', handleScoreChange);
@@ -496,35 +604,6 @@
                 btn.removeEventListener('click', handleDeleteClick);
                 btn.addEventListener('click', handleDeleteClick);
             });
-        }
-        
-        function handleScoreChange(e) {
-            const idKartu = e.target.dataset.id;
-            const val = parseInt(e.target.value) || 0;
-            const index = pesertaData.findIndex(p => p.idKartu === idKartu);
-            if (index !== -1) {
-                pesertaData[index].weeklyCount = val;
-                hitungRanking();
-                saveToFirebase();
-                updateOperatorTable();
-                if (isViewerLoggedIn) updateViewerTable();
-            }
-        }
-        
-        function handleEditClick(e) {
-            const idKartu = e.currentTarget.dataset.id;
-            openEditModal(idKartu);
-        }
-        
-        function handleDeleteClick(e) {
-            const idKartu = e.currentTarget.dataset.id;
-            if (confirm("Hapus pengguna ini?")) {
-                pesertaData = pesertaData.filter(p => p.idKartu !== idKartu);
-                hitungRanking();
-                saveToFirebase();
-                updateOperatorTable();
-                if (isViewerLoggedIn) updateViewerTable();
-            }
         }
         
         function updateViewerTable() {
@@ -559,6 +638,38 @@
             document.getElementById("totalPesertaViewer").innerText = pesertaData.length;
         }
         
+        // ==================== EVENT HANDLERS ====================
+        async function handleScoreChange(e) {
+            const idKartu = e.target.dataset.id;
+            const val = parseInt(e.target.value) || 0;
+            const index = pesertaData.findIndex(p => p.idKartu === idKartu);
+            if (index !== -1) {
+                pesertaData[index].weeklyCount = val;
+                hitungRanking();
+                await saveToFirebase();
+                updateOperatorTable();
+                if (isViewerLoggedIn) updateViewerTable();
+                showToast("✅ Skor diperbarui!");
+            }
+        }
+        
+        function handleEditClick(e) {
+            const idKartu = e.currentTarget.dataset.id;
+            openEditModal(idKartu);
+        }
+        
+        async function handleDeleteClick(e) {
+            const idKartu = e.currentTarget.dataset.id;
+            if (confirm("Hapus pengguna ini?")) {
+                pesertaData = pesertaData.filter(p => p.idKartu !== idKartu);
+                hitungRanking();
+                await saveToFirebase();
+                updateOperatorTable();
+                if (isViewerLoggedIn) updateViewerTable();
+                showToast("✅ Pengguna dihapus!");
+            }
+        }
+        
         // ==================== CRUD FUNCTIONS ====================
         async function tambahUser() {
             const idKartu = document.getElementById("idKartu").value.trim();
@@ -566,17 +677,23 @@
             const kelas = document.getElementById("kelas").value;
             const jk = document.getElementById("jenisKelamin").value;
             
+            console.log("Tambah User - ID:", idKartu, "Nama:", nama, "Kelas:", kelas, "JK:", jk);
+            
             if (!idKartu || !nama || !kelas || !jk) {
                 alert("❌ Harap isi semua data!");
+                console.log("Validasi gagal: ada field kosong");
                 return;
             }
             
-            if (pesertaData.some(p => p.idKartu === idKartu)) {
+            // Cek duplikat
+            const isDuplicate = pesertaData.some(p => p.idKartu === idKartu);
+            if (isDuplicate) {
                 alert("❌ ID Kartu sudah terdaftar!");
+                console.log("Validasi gagal: ID duplikat", idKartu);
                 return;
             }
             
-            pesertaData.push({
+            const newUser = {
                 idKartu: idKartu,
                 nama: nama,
                 kelas: kelas,
@@ -584,19 +701,27 @@
                 weeklyCount: 0,
                 skor: 0,
                 ranking: 0
-            });
+            };
             
+            console.log("Menambahkan user baru:", newUser);
+            pesertaData.push(newUser);
             hitungRanking();
-            await saveToFirebase();
-            updateOperatorTable();
-            if (isViewerLoggedIn) updateViewerTable();
             
-            document.getElementById("idKartu").value = "";
-            document.getElementById("namaPengguna").value = "";
-            document.getElementById("kelas").value = "";
-            document.getElementById("jenisKelamin").value = "";
-            
-            alert(`✅ Pengguna "${nama}" berhasil ditambahkan!`);
+            const success = await saveToFirebase();
+            if (success) {
+                updateOperatorTable();
+                if (isViewerLoggedIn) updateViewerTable();
+                
+                document.getElementById("idKartu").value = "";
+                document.getElementById("namaPengguna").value = "";
+                document.getElementById("kelas").value = "";
+                document.getElementById("jenisKelamin").value = "";
+                
+                alert(`✅ Pengguna "${nama}" berhasil ditambahkan!`);
+                console.log("User berhasil ditambahkan, total:", pesertaData.length);
+            } else {
+                alert("❌ Gagal menyimpan ke Firebase!");
+            }
         }
         
         function openEditModal(idKartu) {
@@ -653,7 +778,7 @@
         }
         
         async function resetAllData() {
-            if (confirm("Yakin menghapus SEMUA data?")) {
+            if (confirm("Yakin menghapus SEMUA data pengguna?")) {
                 pesertaData = [];
                 await saveToFirebase();
                 updateOperatorTable();
@@ -727,8 +852,9 @@
                     })).filter(r => r.idKartu);
                     
                     if (uploadedExcelData.length) {
-                        let html = '<table style="width:100%"><tr><th>ID</th><th>Nama</th><th>Kelas</th><th>JK</th></tr>';
+                        let html = '<table style="width:100%"><tr style="background:#f0e6a0;"><th>ID</th><th>Nama</th><th>Kelas</th><th>JK</th></tr>';
                         uploadedExcelData.slice(0,10).forEach(r => html += `<tr><td>${r.idKartu}</td><td>${r.nama}</td><td>${r.kelas}</td><td>${r.jk}</td></tr>`);
+                        if (uploadedExcelData.length > 10) html += `<tr><td colspan="4">... dan ${uploadedExcelData.length-10} data lainnya</td></tr>`;
                         html += '</table>';
                         document.getElementById("previewTable").innerHTML = html;
                         document.getElementById("filePreview").style.display = "block";
@@ -785,7 +911,7 @@
         
         function refreshData() {
             loadFromFirebase();
-            alert("🔄 Data dimuat ulang dari Firebase!");
+            showToast("🔄 Memuat ulang data dari Firebase...");
         }
         
         // ==================== EVENT LISTENERS ====================
@@ -815,12 +941,17 @@
             document.getElementById("logoutOperatorBtn").onclick = () => location.reload();
             document.getElementById("logoutViewerBtn").onclick = () => location.reload();
             
-            // CRUD
-            document.getElementById("tambahPesertaBtn").onclick = tambahUser;
+            // CRUD - PASTIKAN TOMOL TERHUBUNG
+            const tambahBtn = document.getElementById("tambahPesertaBtn");
+            if (tambahBtn) {
+                tambahBtn.onclick = tambahUser;
+                console.log("Tombol Tambah Pengguna terhubung");
+            } else {
+                console.error("Tombol tambahPesertaBtn tidak ditemukan!");
+            }
+            
             document.getElementById("saveEditBtn").onclick = saveEditUser;
             document.getElementById("cancelEditBtn").onclick = closeEditModal;
-            
-            // Settings
             document.getElementById("refreshDataBtn").onclick = refreshData;
             document.getElementById("refreshTableBtn").onclick = refreshData;
             document.getElementById("settingsBtn").onclick = () => {
@@ -834,17 +965,11 @@
             document.getElementById("showSettingsBtn").onclick = () => document.getElementById("settingsSection").style.display = "block";
             document.getElementById("updateEventBtn").onclick = updateEventInfo;
             document.getElementById("savePasswordBtn").onclick = changePassword;
-            
-            // Export
             document.getElementById("exportExcelBtn").onclick = exportToExcel;
             document.getElementById("exportPDFBtn").onclick = exportToPDF;
-            
-            // Reset
             document.getElementById("resetDataBtn").onclick = () => document.getElementById("resetModal").style.display = "flex";
             document.getElementById("confirmResetBtn").onclick = resetAllData;
             document.getElementById("cancelResetBtn").onclick = () => document.getElementById("resetModal").style.display = "none";
-            
-            // Excel import
             document.getElementById("excelFile").onchange = handleFileUpload;
             document.getElementById("uploadExcelBtn").onclick = importExcelData;
             document.getElementById("clearPreviewBtn").onclick = clearPreview;
