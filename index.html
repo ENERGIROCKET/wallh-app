@@ -313,7 +313,12 @@
         <div class="edit-modal" id="editModal"><div class="edit-modal-content"><h3>✏️ Edit Data Pengguna</h3>
             <div class="form-group"><label>ID Kartu</label><input type="text" id="editIdKartu" readonly style="background:#f5f5f5;"></div>
             <div class="form-group"><label>Nama</label><input type="text" id="editNama" placeholder="Nama"></div>
-            <div class="form-group"><label>Kelas</label><select id="editKelas"><option>7A</option><option>7B</option><option>7C</option><option>8A</option><option>8B</option><option>8C</option><option>9A</option><option>9B</option><option>9C</option><option>GURU</option><option>STAFF</option></select></div>
+            <div class="form-group"><label>Kelas</label><select id="editKelas">
+                <option value="7A">7A</option><option value="7B">7B</option><option value="7C">7C</option>
+                <option value="8A">8A</option><option value="8B">8B</option><option value="8C">8C</option>
+                <option value="9A">9A</option><option value="9B">9B</option><option value="9C">9C</option>
+                <option value="GURU">GURU</option><option value="STAFF">STAFF</option>
+            </select></div>
             <div class="form-group"><label>JK</label><select id="editJk"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></div>
             <div class="modal-buttons"><button class="btn btn-success" id="saveEditBtn">💾 Simpan</button><button class="btn btn-danger" id="cancelEditBtn">❌ Batal</button></div>
         </div></div>
@@ -347,7 +352,7 @@
         let currentPassword = "wallh2026";
         let isOperatorLoggedIn = false;
         let isViewerLoggedIn = false;
-        let currentEditId = null;
+        let currentEditCleanId = null;
         let uploadedExcelData = [];
         
         function showToast(message, isError = false) {
@@ -360,13 +365,11 @@
         }
         
         // ==================== FUNGSI KONVERSI ID ====================
-        // Hapus semua titik dari ID
         function removeDots(id) {
             if (!id) return "";
             return id.toString().replace(/\./g, "");
         }
         
-        // Tambah titik setiap 3 digit (untuk tampilan)
         function addDots(id) {
             if (!id || id.length <= 3) return id;
             let result = "";
@@ -405,53 +408,16 @@
         }
         
         // ==================== HAPUS USER DARI FIREBASE ====================
-        async function deleteUserFromFirebase(idKartu) {
+        async function deleteUserFromFirebase(cleanId) {
             try {
-                const cleanId = removeDots(idKartu);
                 const userRef = database.ref('users/' + cleanId);
                 await userRef.remove();
-                console.log(`✅ User ${idKartu} berhasil dihapus`);
-                showToast(`✅ User ${idKartu} berhasil dihapus!`);
+                console.log(`✅ User ${cleanId} berhasil dihapus`);
+                showToast(`✅ User berhasil dihapus!`);
                 return true;
             } catch (error) {
                 console.error("Gagal hapus:", error);
                 showToast(`❌ Gagal hapus: ${error.message}`, true);
-                return false;
-            }
-        }
-        
-        // ==================== SIMPAN KE FIREBASE ====================
-        async function saveToFirebase() {
-            try {
-                for (const user of pesertaData) {
-                    const cleanId = removeDots(user.idKartu);
-                    await database.ref('users/' + cleanId).set({
-                        uid: user.idKartu,
-                        nama: user.nama,
-                        kelas: user.kelas,
-                        jk: user.jk,
-                        weeklyCount: user.weeklyCount || 0,
-                        skor: user.skor || 0,
-                        ranking: user.ranking || 0
-                    });
-                }
-                
-                await database.ref('system').set({
-                    namaSekolah: eventInfo.namaSekolah,
-                    predikat: eventInfo.predikat,
-                    targetMingguan: eventInfo.targetMingguan,
-                    skorMaksimal: eventInfo.skorMaksimal
-                });
-                
-                document.getElementById("saveStatus").innerHTML = "✅ Data tersimpan " + new Date().toLocaleTimeString();
-                setTimeout(() => {
-                    if (document.getElementById("saveStatus")) 
-                        document.getElementById("saveStatus").innerHTML = "✅ Terhubung ke Firebase";
-                }, 2000);
-                return true;
-            } catch (error) {
-                console.error("Save error:", error);
-                document.getElementById("saveStatus").innerHTML = "⚠️ Gagal simpan";
                 return false;
             }
         }
@@ -466,7 +432,6 @@
                     const usersObj = usersSnapshot.val();
                     pesertaData = Object.keys(usersObj).map((key, index) => {
                         const user = usersObj[key];
-                        // Tampilkan ID dengan titik untuk user friendly
                         const displayId = user.uid || addDots(key);
                         return {
                             id: index + 1,
@@ -585,7 +550,7 @@
                     <td><strong>${p.nama || ''}</strong></td>
                     <td>${p.kelas || ''}</td>
                     <td>${p.jk || ''}</td>
-                    <td><input type="number" class="score-input" data-clean="${p.cleanId}" data-display="${p.idKartu}" value="${p.weeklyCount || 0}" min="0" max="100" step="1" style="width:70px;"></td>
+                    <td><input type="number" class="score-input" data-clean="${p.cleanId}" value="${p.weeklyCount || 0}" min="0" max="100" step="1" style="width:70px;"></td>
                     <td class="${p.skor >= 67 ? 'best-score' : ''}">${p.skor || 0} / ${maxSkor}</td>
                     <td>${p.ranking || 0}</td>
                     <td>
@@ -618,7 +583,7 @@
             const maxSkor = eventInfo.skorMaksimal;
             
             if (pesertaData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7">Belum ada数据</td</tr>';
+                tbody.innerHTML = '<tr><td colspan="7">Belum ada data</td</td>';
                 return;
             }
             
@@ -644,18 +609,16 @@
         // ==================== EVENT HANDLERS ====================
         async function handleScoreChange(e) {
             const cleanId = e.target.dataset.clean;
-            const displayId = e.target.dataset.display;
             const val = parseInt(e.target.value) || 0;
             
             await database.ref('users/' + cleanId + '/weeklyCount').set(val);
             
-            // Update skor
             const target = eventInfo.targetMingguan;
             const maxSkor = eventInfo.skorMaksimal;
             const skor = (val >= target) ? maxSkor : Math.floor((val / target) * maxSkor);
             await database.ref('users/' + cleanId + '/skor').set(skor);
             
-            showToast(`✅ Skor untuk ${displayId} diperbarui!`);
+            showToast(`✅ Skor diperbarui!`);
         }
         
         function handleEditClick(e) {
@@ -670,13 +633,12 @@
             
             if (confirm(`⚠️ Yakin ingin menghapus pengguna dengan ID: ${displayId}?\n\nTindakan ini tidak dapat dibatalkan!`)) {
                 const btn = e.currentTarget;
-                const originalText = btn.innerHTML;
                 btn.innerHTML = "⏳...";
                 btn.disabled = true;
                 
-                await deleteUserFromFirebase(displayId);
+                await deleteUserFromFirebase(cleanId);
                 
-                btn.innerHTML = originalText;
+                btn.innerHTML = "🗑️ Hapus";
                 btn.disabled = false;
             }
         }
@@ -688,7 +650,6 @@
             const kelas = document.getElementById("kelas").value;
             const jk = document.getElementById("jenisKelamin").value;
             
-            // Hapus semua titik dari ID
             idKartu = removeDots(idKartu);
             
             if (!idKartu || !nama || !kelas || !jk) {
@@ -696,7 +657,6 @@
                 return;
             }
             
-            // Validasi hanya angka
             if (!/^\d+$/.test(idKartu)) {
                 alert("❌ ID Kartu hanya boleh berisi angka!");
                 return;
@@ -704,7 +664,6 @@
             
             const displayId = addDots(idKartu);
             
-            // Cek apakah sudah ada
             const snapshot = await database.ref('users/' + idKartu).once('value');
             if (snapshot.exists()) {
                 alert(`❌ ID Kartu ${displayId} sudah terdaftar!`);
@@ -731,8 +690,12 @@
         
         function openEditModal(cleanId, displayId) {
             const user = pesertaData.find(p => p.cleanId === cleanId);
-            if (!user) return;
-            currentEditId = cleanId;
+            if (!user) {
+                console.error("User tidak ditemukan:", cleanId);
+                return;
+            }
+            
+            currentEditCleanId = cleanId;
             document.getElementById("editIdKartu").value = displayId;
             document.getElementById("editNama").value = user.nama;
             document.getElementById("editKelas").value = user.kelas;
@@ -750,19 +713,32 @@
                 return;
             }
             
-            await database.ref('users/' + currentEditId).update({
-                nama: newNama,
-                kelas: newKelas,
-                jk: newJk
-            });
+            if (!currentEditCleanId) {
+                alert("Error: ID user tidak ditemukan!");
+                return;
+            }
             
-            showToast("✅ Data berhasil diupdate!");
-            closeEditModal();
+            try {
+                await database.ref('users/' + currentEditCleanId).update({
+                    nama: newNama,
+                    kelas: newKelas,
+                    jk: newJk
+                });
+                
+                showToast("✅ Data berhasil diupdate!");
+                closeEditModal();
+            } catch (error) {
+                console.error("Error update:", error);
+                alert("❌ Gagal mengupdate data!");
+            }
         }
         
         function closeEditModal() {
             document.getElementById("editModal").style.display = "none";
-            currentEditId = null;
+            currentEditCleanId = null;
+            document.getElementById("editNama").value = "";
+            document.getElementById("editKelas").value = "7A";
+            document.getElementById("editJk").value = "L";
         }
         
         async function updateEventInfo() {
@@ -772,7 +748,12 @@
             eventInfo.skorMaksimal = parseInt(document.getElementById("skorMaksimal").value);
             updateHeaderInfo();
             hitungRanking();
-            await saveToFirebase();
+            await database.ref('system').set({
+                namaSekolah: eventInfo.namaSekolah,
+                predikat: eventInfo.predikat,
+                targetMingguan: eventInfo.targetMingguan,
+                skorMaksimal: eventInfo.skorMaksimal
+            });
             alert("✅ Informasi sekolah diperbarui!");
         }
         
